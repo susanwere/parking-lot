@@ -1,0 +1,36 @@
+require: rubocop
+
+AllCops:
+    Exclude:
+        - 'config/initializers/*'
+        - 'db/migrate/*'
+        - 'db/views/*'
+        - 'db/schema.rb'
+        - 'db/seeds.rb'
+        - 'bin/*'
+        - 'vendor/**/*'
+        - 'Gemfile.lock'
+
+Metrics/AbcSize:
+    Max: 30
+
+Metrics/BlockLength:
+    Max: 100
+
+Layout/LineLength:
+    Max: 100
+
+Metrics/MethodLength:
+    Max: 50
+
+Style/Documentation:
+    Enabled: false
+
+Style/HashEachMethods:
+    Enabled: true
+
+Style/HashTransformKeys:
+    Enabled: true
+
+Style/HashTransformValues:
+    Enabled: true

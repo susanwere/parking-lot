@@ -1,46 +1,49 @@
-class Api::TicketsController < ApplicationController
-  require 'securerandom'
-  before_action :set_ticket, only: [:show, :update, :destroy]
+# frozen_string_literal: true
 
-  # GET /tickets
-  def index
-    @tickets = Ticket.all
+module Api
+  class TicketsController < ApplicationController
+    require 'securerandom'
+    before_action :set_ticket, only: %i[show update destroy]
 
-    render json: @tickets
-  end
+    # GET /tickets
+    def index
+      @tickets = Ticket.all
 
-  # GET /tickets/1
-  def show
-    render json: @ticket
-  end
-
-  # POST /tickets
-  def create
-    @ticket = Ticket.new(barcode: SecureRandom.hex(8), ticketedtime: Time.now())
-    
-
-    if @ticket.save
-      render json: @ticket, status: :created
-    else
-      render json: @ticket.errors, status: :unprocessable_entity
+      render json: @tickets
     end
-  end
 
-  # PATCH/PUT /tickets/1
-  def update
-    if @ticket.update(ticket_params)
+    # GET /tickets/1
+    def show
       render json: @ticket
-    else
-      render json: @ticket.errors, status: :unprocessable_entity
     end
-  end
 
-  # DELETE /tickets/1
-  def destroy
-    @ticket.destroy
-  end
+    # POST /tickets
+    def create
+      @ticket = Ticket.new(barcode: SecureRandom.hex(8), ticketedtime: Time.now)
 
-  private
+      if @ticket.save
+        render json: @ticket, status: :created
+      else
+        render json: @ticket.errors, status: :unprocessable_entity
+      end
+    end
+
+    # PATCH/PUT /tickets/1
+    def update
+      if @ticket.update(ticket_params)
+        render json: @ticket
+      else
+        render json: @ticket.errors, status: :unprocessable_entity
+      end
+    end
+
+    # DELETE /tickets/1
+    def destroy
+      @ticket.destroy
+    end
+
+    private
+
     # Use callbacks to share common setup or constraints between actions.
     def set_ticket
       @ticket = Ticket.find(params[:id])
@@ -55,4 +58,5 @@ class Api::TicketsController < ApplicationController
     def ticket_params
       params.require(:ticket).permit(:barcode, :ticketedtime)
     end
+  end
 end
