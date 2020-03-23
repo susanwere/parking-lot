@@ -16,3 +16,17 @@
     2. export POSTGRES_PASSWORD=POSTGRES_PASSWORD
     3. export RUBYOPT='-W:no-deprecated -W:no-experimental' //to surpress ruby 2.7.0 warnings
 
+### APIS
+
+  #### Post a new ticket
+
+      `https://app-parking-lot.herokuapp.com/api/tickets`
+
+  #### Get all tickets
+
+      `https://app-parking-lot.herokuapp.com/api/tickets`
+
+  #### Get ticket by barcode
+
+      `https://app-parking-lot.herokuapp.com/api/tickets/{barcode}`
+ 
