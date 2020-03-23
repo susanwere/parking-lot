@@ -4,6 +4,7 @@ module Api
   class TicketsController < ApplicationController
     require 'securerandom'
     before_action :set_ticket, only: %i[show update destroy]
+    before_action :calculate_price, only: %i[show update destroy]
 
     # GET /tickets
     def index
@@ -14,6 +15,12 @@ module Api
 
     # GET /tickets/1
     def show
+      render json: @ticket
+    end
+
+    def get_by_barcode
+      @ticket = Ticket.find_by_barcode(params[:barcode])
+      calculate_price
       render json: @ticket
     end
 
@@ -42,6 +49,14 @@ module Api
       @ticket.destroy
     end
 
+    def calculate_price
+      number_of_times = ((Time.now - @ticket[:ticketedtime])/3600).to_s.split(".")
+      if @ticket[:price_cents] != (2 * number_of_times[0].to_i)
+        @ticket[:price_cents] = (2 * number_of_times[0].to_i)
+        @ticket.save!
+      end
+    end
+
     private
 
     # Use callbacks to share common setup or constraints between actions.
@@ -56,7 +71,7 @@ module Api
 
     # Only allow a trusted parameter "white list" through.
     def ticket_params
-      params.require(:ticket).permit(:barcode, :ticketedtime)
+      params.require(:ticket).permit(:barcode, :ticketedtime, :price_cents)
     end
   end
 end

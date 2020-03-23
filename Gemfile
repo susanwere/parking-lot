@@ -52,3 +52,4 @@ end
 gem 'coveralls', require: false
 gem 'rubocop'
 gem 'tzinfo-data', platforms: %i[mingw mswin x64_mingw jruby]
+gem 'money-rails', '~>1.12'
