@@ -10,18 +10,65 @@ module Api
     def index
       @tickets = Ticket.all
 
-      render json: @tickets
+      json_response(@tickets, :ok)
     end
 
     # GET /tickets/1
     def show
-      render json: @ticket
+      json_response(@ticket, :ok)
     end
 
     def get_by_barcode
       @ticket = Ticket.find_by_barcode(params[:barcode])
+      if @ticket
+        calculate_price
+        json_response(@ticket, :ok)
+      else
+        raise ActiveRecord::RecordNotFound
+      end
+    end
+
+    def check_payment
+      if @ticket.paid?
+        json_response({error: "This ticket has already been paid for"}, :unprocessable_entity)
+        return
+      elsif ticket_params[:price_cents] == @ticket.price_cents
+        params[:ticket][:price_cents] = 0
+      elsif ticket_params[:price_cents] < @ticket.price_cents
+        json_response({error: "The payment is insuficient. Kindly pay €#{@ticket.price_cents}"}, :unprocessable_entity)
+        return
+      elsif ticket_params[:price_cents] > @ticket.price_cents
+        json_response({error: "The payment is in excess. Kindly pay €#{@ticket.price_cents}"}, :unprocessable_entity)
+        return
+      end
+    end
+
+    def check_payment_option
+      payment_option = Ticket.payment_options[ticket_params[:payment_option]] 
+      if payment_option
+        params[:ticket][:payment_option] = payment_option
+      else
+        json_response({error: "The payment option is invalid. Use cash, credit_card or debit_card"}, :unprocessable_entity)
+        return
+      end
+    end
+
+    def payment
+      @ticket = Ticket.find_by_barcode(params[:barcode])
       calculate_price
-      render json: @ticket
+
+      return unless check_payment
+      return unless check_payment_option
+
+      @ticket[:paid] = true
+      @ticket[:payment_time] = Time.now()
+
+      if @ticket.update(ticket_params)
+        json_response(@ticket, :ok)
+      else
+        json_response(@ticket.errors, :unprocessable_entity)
+      end
+
     end
 
     # POST /tickets
@@ -29,9 +76,9 @@ module Api
       @ticket = Ticket.new(barcode: SecureRandom.hex(8), ticketedtime: Time.now)
 
       if @ticket.save
-        render json: @ticket, status: :created
+        json_response(@ticket, :created)
       else
-        render json: @ticket.errors, status: :unprocessable_entity
+        json_response(@ticket.errors, :unprocessable_entity)
       end
     end
 
@@ -40,7 +87,7 @@ module Api
       if @ticket.update(ticket_params)
         render json: @ticket
       else
-        render json: @ticket.errors, status: :unprocessable_entity
+        json_response(@ticket.errors, :unprocessable_entity)
       end
     end
 
@@ -62,16 +109,11 @@ module Api
     # Use callbacks to share common setup or constraints between actions.
     def set_ticket
       @ticket = Ticket.find(params[:id])
-    rescue ActiveRecord::RecordNotFound
-      render json: {
-        error: "Ticket with id #{params[:id]} not found",
-        status: :not_found
-      }
     end
 
     # Only allow a trusted parameter "white list" through.
     def ticket_params
-      params.require(:ticket).permit(:barcode, :ticketedtime, :price_cents)
+      params.require(:ticket).permit(:barcode, :ticketedtime, :price_cents, :paid, :payment_option, :payment_time)
     end
   end
 end

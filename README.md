@@ -29,4 +29,7 @@
   #### Get ticket by barcode
 
       `https://app-parking-lot.herokuapp.com/api/tickets/{barcode}`
- 
+
+  #### Post to mark ticket as paid
+
+      `https://app-parking-lot.herokuapp.com/api/tickets/{barcode}/payments`
