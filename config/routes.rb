@@ -6,5 +6,6 @@ Rails.application.routes.draw do
     post '/tickets', to: 'tickets#create'
     get '/tickets', to: 'tickets#index'
     get '/tickets/:barcode', to: 'tickets#get_by_barcode', as: 'get_by_barcode'
+    post '/tickets/:barcode/payments', to: 'tickets#payment', as: 'payment'
   end
 end
