@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_03_24_184434) do
+ActiveRecord::Schema.define(version: 2020_03_25_060243) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -25,6 +25,8 @@ ActiveRecord::Schema.define(version: 2020_03_24_184434) do
     t.boolean "paid", default: false
     t.datetime "payment_time"
     t.integer "payment_option"
+    t.integer "previous_price_cents", default: 0, null: false
+    t.string "previous_price_currency", default: "EUR", null: false
   end
 
 end
