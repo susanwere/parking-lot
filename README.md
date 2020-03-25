@@ -33,3 +33,7 @@
   #### Post to mark ticket as paid
 
       `https://app-parking-lot.herokuapp.com/api/tickets/{barcode}/payments`
+
+  #### Get paid state of the ticket
+
+      `https://app-parking-lot.herokuapp.com/api/tickets/{barcode}/state`

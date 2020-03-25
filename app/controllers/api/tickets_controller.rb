@@ -33,6 +33,7 @@ module Api
         json_response({error: "This ticket has already been paid for"}, :unprocessable_entity)
         return
       elsif ticket_params[:price_cents] == @ticket.price_cents
+        @ticket.previous_price_cents = params[:ticket][:price_cents]
         params[:ticket][:price_cents] = 0
       elsif ticket_params[:price_cents] < @ticket.price_cents
         json_response({error: "The payment is insuficient. Kindly pay €#{@ticket.price_cents}"}, :unprocessable_entity)
@@ -53,6 +54,26 @@ module Api
       end
     end
 
+    def check_payment_state
+      @ticket = Ticket.find_by_barcode(params[:barcode])
+      if @ticket.payment_time
+        time_difference = (Time.now.in_time_zone('GMT') - @ticket.payment_time.in_time_zone('GMT'))/60
+        if @ticket.price_cents == 0 && !(time_difference > 15)
+          @ticket[:paid] = true
+          json_response({paid: "Payment has been made for this ticket"}, :ok)
+        else
+          @ticket.price_cents = @ticket.previous_price_cents
+          @ticket.paid = false
+          @ticket.save!
+          json_response({unpaid: "You need to make another payment"}, :unprocessable_entity)
+          return
+        end
+      else
+        json_response({unpaid: "You need to make a payment"}, :unprocessable_entity)
+        return
+      end
+    end
+
     def payment
       @ticket = Ticket.find_by_barcode(params[:barcode])
       calculate_price
@@ -60,7 +81,6 @@ module Api
       return unless check_payment
       return unless check_payment_option
 
-      @ticket[:paid] = true
       @ticket[:payment_time] = Time.now()
 
       if @ticket.update(ticket_params)
@@ -97,7 +117,7 @@ module Api
     end
 
     def calculate_price
-      number_of_times = ((Time.now - @ticket[:ticketedtime])/3600).to_s.split(".")
+      number_of_times = ((Time.now.in_time_zone('UTC') - @ticket[:ticketedtime].in_time_zone('UTC'))/3600).to_s.split(".")
       if @ticket[:price_cents] != (2 * number_of_times[0].to_i)
         @ticket[:price_cents] = (2 * number_of_times[0].to_i)
         @ticket.save!
