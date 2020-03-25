@@ -3,7 +3,7 @@
 module Api
   class TicketsController < ApplicationController
     require 'securerandom'
-    before_action :set_ticket, only: %i[show update destroy]
+    before_action :set_ticket
     before_action :calculate_price, only: %i[show update destroy]
 
     # GET /tickets
@@ -13,13 +13,7 @@ module Api
       json_response(@tickets, :ok)
     end
 
-    # GET /tickets/1
-    def show
-      json_response(@ticket, :ok)
-    end
-
     def get_by_barcode
-      @ticket = Ticket.find_by_barcode(params[:barcode])
       if @ticket
         calculate_price
         json_response(@ticket, :ok)
@@ -55,12 +49,12 @@ module Api
     end
 
     def check_payment_state
-      @ticket = Ticket.find_by_barcode(params[:barcode])
       if @ticket.payment_time
         time_difference = (Time.now.in_time_zone('GMT') - @ticket.payment_time.in_time_zone('GMT'))/60
         if @ticket.price_cents == 0 && !(time_difference > 15)
           @ticket[:paid] = true
           json_response({paid: "Payment has been made for this ticket"}, :ok)
+          @ticket.delete
         else
           @ticket.price_cents = @ticket.previous_price_cents
           @ticket.paid = false
@@ -75,7 +69,6 @@ module Api
     end
 
     def payment
-      @ticket = Ticket.find_by_barcode(params[:barcode])
       calculate_price
 
       return unless check_payment
@@ -93,12 +86,16 @@ module Api
 
     # POST /tickets
     def create
-      @ticket = Ticket.new(barcode: SecureRandom.hex(8), ticketedtime: Time.now)
+      if Ticket.all.count <= 54
+        @ticket = Ticket.new(barcode: SecureRandom.hex(8), ticketedtime: Time.now)
 
-      if @ticket.save
-        json_response(@ticket, :created)
+        if @ticket.save
+          json_response(@ticket, :created)
+        else
+          json_response(@ticket.errors, :unprocessable_entity)
+        end
       else
-        json_response(@ticket.errors, :unprocessable_entity)
+        json_response({message: "The parking lot is full"}, :unprocessable_entity)
       end
     end
 
@@ -124,11 +121,16 @@ module Api
       end
     end
 
+    def free_spaces
+      free_spaces = 54 - Ticket.all.count
+      json_response({free_spaces: free_spaces}, :ok)
+    end
+
     private
 
     # Use callbacks to share common setup or constraints between actions.
     def set_ticket
-      @ticket = Ticket.find(params[:id])
+      @ticket = Ticket.find_by_barcode(params[:barcode])
     end
 
     # Only allow a trusted parameter "white list" through.
