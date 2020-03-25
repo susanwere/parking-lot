@@ -47,4 +47,10 @@ describe 'tickets', type: :request do
     expect(response).to have_http_status(:unprocessable_entity)
     expect(JSON.parse(response.body)['unpaid']).to eq("You need to make a payment")
   end
+
+  it 'gets free spaces' do
+    get '/api/free-spaces'
+    expect(response).to have_http_status(:ok)
+    expect(JSON.parse(response.body)['free_spaces']).to eq(53)
+  end
 end

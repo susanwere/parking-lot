@@ -37,3 +37,7 @@
   #### Get paid state of the ticket
 
       `https://app-parking-lot.herokuapp.com/api/tickets/{barcode}/state`
+
+  #### Get free spaces
+
+      `https://app-parking-lot.herokuapp.com/api/free-spaces`
